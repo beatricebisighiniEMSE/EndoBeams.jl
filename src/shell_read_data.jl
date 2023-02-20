@@ -1,6 +1,6 @@
 # This function reads the mesh file and returns: 
 # nodal coordinates, and element connectivity.
-function read_mesh_file(input_folder)
+function shell_read_mesh_file(input_folder,T)
     
     fid = open(input_folder*"/Preprocessing.dat", "r")
 

@@ -32,6 +32,9 @@ struct SimulationParameters{T}
     epsC::T
     mu_T::T
     eps_tol_fric::T
+
+    #flag triangulated surface
+    flag_triangulated_surface::Bool
     
 end
 
@@ -282,12 +285,13 @@ Constructor of the structure containing the simulation parameters:
 - `eps_C`: penalty coefficient for the contact normal contributions (`::T`);
 - `mu_T`: friction coefficient (`::T`);
 - `eps_tol_fric`: regularisation coefficient for the contact tangential contributions (`::T`).
+- `flag_triangulated_surface`: true in case a tringulated surface is used; flase for a standard sdf
 
 Returns a SimulationParameters structure.
 """
-function constructor_simulation_parameters(alpha, beta, gamma, damping, dt, dt_plot, tend, tol_res, tol_ddk, max_it, nG, wG, zG, eps_C, mu_T, eps_tol_fric, T=Float64)
+function constructor_simulation_parameters(alpha, beta, gamma, damping, dt, dt_plot, tend, tol_res, tol_ddk, max_it, nG, wG, zG, eps_C, mu_T, eps_tol_fric, flag_triangulated_surface, T=Float64)
     
-    return SimulationParameters{T}(alpha, beta, gamma, damping, dt, dt_plot, tend, tol_res, tol_ddk, max_it, nG, wG, zG, eps_C, mu_T, eps_tol_fric)
+    return SimulationParameters{T}(alpha, beta, gamma, damping, dt, dt_plot, tend, tol_res, tol_ddk, max_it, nG, wG, zG, eps_C, mu_T, eps_tol_fric, flag_triangulated_surface)
     
 end 
 

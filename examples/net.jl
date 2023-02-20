@@ -2,12 +2,33 @@ using EndoBeams
 
 const T = Float64
 
+
+# =============================================================================================
+#  ----------------------------  SHELL --------------------------------------------------------
+# =============================================================================================
+XShell, TShell, fixed_dofs_shell, type_geometry_shell =  shell_read_mesh_file("examples/input_net/",T)
+nnodesShell = size(XShell,1) # no. of nodes
+nelemShell = size(TShell,1) # no. of elements
+u_aux = zeros(3*nnodesShell) # solution vector
+# Re-arrange solution vector  
+u = Vector{Vec3{T}}()
+for i in 1:3:nnodesShell*3
+    push!(u, Vec3(0.0,0.0,0.0))
+end 
+
+allnodesShell = shell_constructor_nodes(XShell, u,) # Structure for all nodes
+allelementsShell = shell_constructor_elements(allnodesShell, TShell) # Structure for all elements
+
+# =============================================================================================
+#  ----------------------------  BEAM --------------------------------------------------------
+# =============================================================================================
 #-------------------------------------------------------------------------------------------
 # Read the mesh
 # -------------------------------------------------------------------------------------------
-
-# positions
 pos =  read_TXT_file_pos("examples/input_net/pos_net.txt")
+
+# println("Xshell = ",Xshell)
+# println("Tshell = ",Tshell)
 nnodes = length(pos)
 
 # connectivity
@@ -92,7 +113,9 @@ eps_C = 0.01
 mu_T = 0.01
 eps_tol_fric = 0.5
 
-comp = constructor_simulation_parameters(alpha, beta, gamma, damping,  dt, dt_plot, tend, tol_res, tol_ddk, max_it, nG, wG, zG, eps_C, mu_T, eps_tol_fric, T)
+flag_triangulated_surface = true
+
+comp = constructor_simulation_parameters(alpha, beta, gamma, damping,  dt, dt_plot, tend, tol_res, tol_ddk, max_it, nG, wG, zG, eps_C, mu_T, eps_tol_fric, flag_triangulated_surface, T)
 
 # -------------------------------------------------------------------------------------------
 # External forces
@@ -136,7 +159,7 @@ sdf = SDF_Sphere{T}(r, 0.05, 0, 0, 0)
 
 # discrete SDF
 # inside = true
-# sdf = constructor_discrete_sdf("examples/input_net/sdf_sphere_20.vtk", r, inside)
+#sdf = constructor_discrete_sdf("examples/input_net/sdf_sphere_20.vtk", r, inside)
 
 # -------------------------------------------------------------------------------------------
 # Configuration

@@ -98,7 +98,9 @@ eps_C = 500 #penalty parameter
 mu_T = 0.01
 eps_tol_fric = 0.1 #regularized parameter for friction contact
 
-comp = constructor_simulation_parameters(alpha, beta, gamma, damping, dt, dt_plot, tend, tol_res, tol_ddk, max_it, nG, wG, zG, eps_C, mu_T, eps_tol_fric, T)
+flag_triangulated_surface = false
+
+comp = constructor_simulation_parameters(alpha, beta, gamma, damping, dt, dt_plot, tend, tol_res, tol_ddk, max_it, nG, wG, zG, eps_C, mu_T, eps_tol_fric, flag_triangulated_surface, T)
 
 # -------------------------------------------------------------------------------------------
 # External forces
