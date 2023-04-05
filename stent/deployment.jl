@@ -35,13 +35,13 @@ function deployment(initial_positions_stent_mat, initial_positions_stent, connec
     ν = 0.33
     mass_scaling = 1E4
     ρ = 9.13*1e-9 * mass_scaling
-    radius = 0.014
-    damping = 1E3*7.5
+    damping = 1E3
+    radius = 0.065
 
     Re₀ = read_ics_mat(readdlm(output_dir_crimping * "Re0.txt"))
 
     # beams vector
-    beams = build_beams(nodes, connectivity_stent, E, ν, ρ, radius, damping, Re₀)
+    beams = build_beams(nodes, connectivity_stent, E, ν, ρ, rWireSection, damping, Re₀)
 
     # contact parameters
     kₙ = 4/3 * 5/(1-0.5^2)*sqrt(radius) # Approximate Hertz contact with 5 MPa wall stiffness
@@ -92,7 +92,7 @@ function deployment(initial_positions_stent_mat, initial_positions_stent, connec
     # SDF
     # -------------------------------------------------------------------------------------------
 
-    sdf = Discrete_SDF(filename_sdf, radius, true)
+    sdf = Discrete_SDF(filename_sdf, rWireSection, true)
 
     # -------------------------------------------------------------------------------------------
     # Final configuration
@@ -107,8 +107,8 @@ function deployment(initial_positions_stent_mat, initial_positions_stent, connec
 
     # initial time step and total time
     ini_Δt = 1e-6
-    max_Δt = 1e-2
-    Δt_plot = 1e-2
+    max_Δt = 1e-3
+    Δt_plot = 1e-3
     tᵉⁿᵈ = 100
 
     params = Params(ini_Δt = ini_Δt, Δt_plot = Δt_plot, max_Δt = max_Δt, tᵉⁿᵈ = tᵉⁿᵈ, output_dir = output_dir_deployment, stop_on_energy_threshold=true, energy_threshold=1e-10, tol_res = 1e-3, tol_ΔD = 1e-3, record_timings=false, verbose=true)

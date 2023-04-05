@@ -2,44 +2,32 @@
 # Stent
 # -------------------------------------------------------------------------------------------
 
-# @with_kw struct Surpass 
-
-#     nbWires::Int = 20
-#     rStent::Float64 = 1.35 
-#     rCrimpedStent::Float64 = 0.9
-#     rWireSection::Float64 = 0.014
-#     wireGap::Float64 = 0
-#     lengthStent::Float64 = 10
-#     nbTotalCells::Float64 = 40.5
-#     braidingPattern::Int = 2
-
-# end
-
-# @with_kw struct BraidedStent 
-
-#     nbWires::Int = 20
-#     rStent::Float64 = 2.5
-#     rCrimpedStent::Float64 = 1.25
-#     rWireSection::Float64 = 0.014
-#     wireGap::Float64 = 0
-#     lengthStent::Float64 = 10
-#     nbTotalCells::Float64 = 20
-#     braidingPattern::Int = 2
-
-# end
-
 @with_kw struct BraidedStent 
 
     nbWires::Int = 24
-    rStent::Float64 = 2.3
-    rCrimpedStent::Float64 = 1.1
+    rStent::Float64 = 2.7
+    rCrimpedStent::Float64 = 1.35
     rWireSection::Float64 = 0.014
     wireGap::Float64 = 0
-    lengthStent::Float64 = 7.5
+    lengthStent::Float64 = 7
     nbTotalCells::Float64 = 35
     braidingPattern::Int = 2
 
-end
+end 
+
+
+@with_kw struct Wallstent 
+
+    nbWires::Int = 12
+    rStent::Float64 = 3
+    rCrimpedStent::Float64 = 1
+    rWireSection::Float64 = 0.065
+    wireGap::Float64 = 0
+    lengthStent::Float64 = 22
+    nbTotalCells::Float64 = 20
+    braidingPattern::Int = 2
+
+end 
 
 function helix!(positions, connectivity, nodeID, length, diameter, nbTotalCells, nbWires, rWireSection, braidingPattern, wireGap, wireID, clockwise)
     
@@ -793,3 +781,18 @@ function save_obj(filename, vertices, trisconn)
     close(fid)
 
 end
+
+function get_init_pos_deploy_middle(filename_cl, initial_positions_stent, output_dir_crimping)
+
+    positions_stent = initial_positions_stent + read_ics_vec(readdlm(output_dir_crimping * "u.txt"))
+    stent = get_centerline_stent(positions_stent)
+    η_stent = vcat(0, cumsum(norm.(diff(stent))))
+    length_stent = η_stent[end]
+
+    cl = read_vtk_centerline(filename_cl)
+    η = vcat(0, cumsum(norm.(diff(cl))))
+    length_cl = η[end]
+
+    return length_cl*0.5-length_stent/2
+
+end 

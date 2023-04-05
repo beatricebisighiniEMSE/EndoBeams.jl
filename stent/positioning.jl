@@ -7,7 +7,7 @@ function positioning(initial_positions_stent, connectivity_stent, nb_iterations,
     # initial time step and total time
     ini_Δt = 1.
     max_Δt = 1.
-    Δt_plot =  0.0
+    Δt_plot =  1.
     tᵉⁿᵈ = nb_iterations-1
     
     params = Params(;ini_Δt, Δt_plot, max_Δt, tᵉⁿᵈ, output_dir = output_dir_positioning, stop_on_energy_threshold=true, energy_threshold=1e-12, tol_res = 1e-3, tol_ΔD = 1e-3, record_timings=false, verbose=false)
@@ -69,18 +69,12 @@ function positioning(initial_positions_stent, connectivity_stent, nb_iterations,
     # -------------------------------------------------------------------------------------------
     
     # geometric and material properties
-    E = 225*1e3
+    stiffness_scaling = 1
+    E = 225*1e3 * stiffness_scaling
     ν = 0.33
-    ρ = 9.13*1e-3
-    radius = 0.065
+    mass_scaling = 1E6
+    ρ = 9.13*1e-9 * mass_scaling
     damping = 1E2
-
-    # E = 225*1e3
-    # ν = 0.33
-    # mass_scaling = 1E6
-    # ρ = 9.13*1e-9 * mass_scaling
-    # radius = 0.014
-    # damping = 1E3*7.5
 
     Re₀ =  zeros(Mat33, nbeams)
     Re₀[1:nbeams_stent] .= read_ics_mat(readdlm(output_dir_crimping * "Re0.txt"))
@@ -91,10 +85,10 @@ function positioning(initial_positions_stent, connectivity_stent, nb_iterations,
     end 
 
     # beams vector
-    beams = build_beams(nodes, connectivity, E, ν, ρ, radius, damping, Re₀)
+    beams = build_beams(nodes, connectivity, E, ν, ρ, rWireSection, damping, Re₀)
     
     # contact parameters
-    kₙ = 4/3 * 5/(1-0.5^2)*sqrt(radius) # Approximate Hertz contact with 5 MPa wall stiffness
+    kₙ = 4/3 * 5/(1-0.5^2)*sqrt(rWireSection) # Approximate Hertz contact with 5 MPa wall stiffness
     μ = 0.01
     εᵗ = 0.001 #regularized parameter for friction contact
     ηₙ = 0.1

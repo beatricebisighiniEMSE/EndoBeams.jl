@@ -1,14 +1,11 @@
+using SignedDistanceField
 using DelimitedFiles
 using Parameters
 using LinearAlgebra
 using Dierckx
 using StaticArrays
-# using SignedDistanceField
-using GeometryBasics
-using LinearAlgebra
 using StructArrays
-using GLMakie
-using FileIO, MeshIO
+using EndoBeams
 
 # cd("stent")
 include("utils_stent.jl")
@@ -32,47 +29,53 @@ output_dir_positioning_cl = "stent/output3D/outputPositioningCl3D/"
 output_dir_positioning = "stent/output3D/outputPositioning3D/"
 output_dir_deployment = "stent/output3D/outputDeployment3D/"
 
-filename_cl = "stent/input/cl_model.vtk"
-filename_surf = "stent/input/model.stl"
-filename_sdf = "stent/input/sdf.vtk"
+n = 0
 
-nb_iterations = 20
-deploy_pos =  1
+filename_cl = "stent/input/cl_$n.vtk"
+filename_surf = "stent/input/model_$n.stl"
+filename_sdf = "stent/input/sdf_$n.vtk"
+
+nb_iterations = 50
+deploy_pos =  get_init_pos_deploy_middle(filename_cl, initial_positions_stent, output_dir_crimping)
 
 # -------------------------------------------------------------------------------------------
 # Reorientation
 # -------------------------------------------------------------------------------------------
 
-# cl_T = read_vtk_centerline(filename_cl)
-# v_η = vcat(0, cumsum(norm.(diff(cl_T))))
-# spline = Vec3(Dierckx.Spline1D(v_η, getindex.(cl_T, i)) for i in 1:3)
+using GeometryBasics
+using GLMakie
+using FileIO, MeshIO
 
-# crimped_positions_stent = initial_positions_stent + read_ics_vec(readdlm(output_dir_crimping * "u.txt"))
-# pos_cl_0 = get_centerline_stent(crimped_positions_stent)
+cl_T = read_vtk_centerline(filename_cl)
+v_η = vcat(0, cumsum(norm.(diff(cl_T))))
+spline = Vec3(Dierckx.Spline1D(v_η, getindex.(cl_T, i)) for i in 1:3)
 
-# # get final centerline
-# cl_η = vcat(0, cumsum(norm.(diff(pos_cl_0))))
-# npointsCl = length(cl_η)
-# pos_cl_T = zeros(Vec3, npointsCl)
-# for i in 1:npointsCl
-#     pos_cl_T[i] = Dierckx.evaluate.(spline, deploy_pos + cl_η[i])
-# end 
-# set_origin!(crimped_positions_stent, pos_cl_0[1]-pos_cl_T[1])   
-# pos_cl_0 =  get_centerline_stent(crimped_positions_stent, pos_cl_T[1])
+crimped_positions_stent = initial_positions_stent + read_ics_vec(readdlm(output_dir_crimping * "u.txt"))
+pos_cl_0 = get_centerline_stent(crimped_positions_stent)
 
-# surface = load(filename_surf)
-# positions = decompose(Point3{Float32}, surface)
-# trisconn = decompose(TriangleFace{Int}, surface)
-# positions_rot = rotate(positions, pos_cl_T[1], pos_cl_0[end]-pos_cl_0[1], pos_cl_T[end]-pos_cl_T[1])
-# new_mesh =   MeshIO.Mesh(positions_rot, trisconn)
+# get final centerline
+cl_η = vcat(0, cumsum(norm.(diff(pos_cl_0))))
+npointsCl = length(cl_η)
+pos_cl_T = zeros(Vec3, npointsCl)
+for i in 1:npointsCl
+    pos_cl_T[i] = Dierckx.evaluate.(spline, deploy_pos + cl_η[i])
+end 
+set_origin!(crimped_positions_stent, pos_cl_0[1]-pos_cl_T[1])   
+pos_cl_0 =  get_centerline_stent(crimped_positions_stent, pos_cl_T[1])
+
+surface = load(filename_surf)
+positions = decompose(Point3{Float32}, surface)
+trisconn = decompose(TriangleFace{Int}, surface)
+positions_rot = rotate(positions, pos_cl_T[1], pos_cl_0[end]-pos_cl_0[1], pos_cl_T[end]-pos_cl_T[1])
+new_mesh =   MeshIO.Mesh(positions_rot, trisconn)
 
 filename_surf = "stent/input/rot_model.stl"
-# save(filename_surf, new_mesh)
+save(filename_surf, new_mesh)
 
-# cl__rot = rotate(cl_T, pos_cl_T[1], pos_cl_0[end]-pos_cl_0[1], pos_cl_T[end]-pos_cl_T[1])
+cl__rot = rotate(cl_T, pos_cl_T[1], pos_cl_0[end]-pos_cl_0[1], pos_cl_T[end]-pos_cl_T[1])
 
-filename_cl = "stent/input/cl_rot_model.vtk"
-# write_vtk_configuration(filename_cl, cl__rot, [])
+filename_cl = "stent/input/rot_cl.vtk"
+write_vtk_configuration(filename_cl, cl__rot, [])
 
 # -------------------------------------------------------------------------------------------
 # Geometrical positioning centerline
@@ -100,14 +103,14 @@ write_vtk_configuration("stent/output3D/positioned.vtk", crimped_positions_stent
 # Deployment
 # -------------------------------------------------------------------------------------------
 
-# if isfile(filename_sdf)
-#     rm(filename_sdf)
-# end
-# s, x, y, z = sdfgen(filename_surf, 0.1; padding = 1, acceleration=:KDTree)
-# write_vtk_general_structured_mesh(filename_sdf, -s, 0.1, x, y, z)
+if isfile(filename_sdf)
+    rm(filename_sdf)
+end
+s, x, y, z = sdfgen(filename_surf, 0.1; padding = 1, acceleration=:KDTree)
+write_vtk_general_structured_mesh(filename_sdf, -s, 0.1, x, y, z)
 
 deployment(initial_positions_stent_mat, initial_positions_stent, connectivity_stent, filename_sdf, output_dir_crimping, output_dir_positioning, output_dir_deployment)
 
-disp = read_ics_vec(readdlm(output_dir_deployment * "u.txt"))
-write_vtk_configuration("stent/output3D/deployed.vtk", initial_positions_stent + disp, connectivity_stent)
+# disp = read_ics_vec(readdlm(output_dir_deployment * "u.txt"))
+# write_vtk_configuration("stent/output3D/deployed.vtk", initial_positions_stent + disp, connectivity_stent)
 
