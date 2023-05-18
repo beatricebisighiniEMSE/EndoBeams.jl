@@ -14,6 +14,8 @@ include("positioning_cl.jl")
 include("positioning.jl")
 include("deployment.jl")
 
+n = 2
+
 # -------------------------------------------------------------------------------------------
 # Create stent
 # -------------------------------------------------------------------------------------------
@@ -23,19 +25,25 @@ initial_positions_stent, connectivity_stent = compute_bs_geom_given_nbTotalCells
 initial_positions_stent_mat = reshape(reinterpret(Float64, initial_positions_stent), (3, length(initial_positions_stent)))'
 
 output_dir_crimping = "stent/output3D/outputCrimping3D/"
-crimping(rStent, rCrimpedStent, initial_positions_stent, connectivity_stent, output_dir_crimping)
+# crimping(rStent, rCrimpedStent, initial_positions_stent, connectivity_stent, output_dir_crimping)
 
-output_dir_positioning_cl = "stent/output3D/outputPositioningCl3D/"
-output_dir_positioning = "stent/output3D/outputPositioning3D/"
-output_dir_deployment = "stent/output3D/outputDeployment3D/"
+output_dir_case = "stent/output3D/case$n/"
+if isdir(output_dir_case)
+    rm(output_dir_case, recursive=true)
+end
+mkdir(output_dir_case)
+output_dir_positioning_cl = output_dir_case*"outputPositioningCl3D/"
+mkdir(output_dir_positioning_cl)
+output_dir_positioning = output_dir_case*"outputPositioning3D/"
+mkdir(output_dir_positioning)
+output_dir_deployment = output_dir_case*"outputDeployment3D/"
+mkdir(output_dir_deployment)
 
-n = 0
-
-filename_cl = "stent/input/cl_$n.vtk"
-filename_surf = "stent/input/model_$n.stl"
+filename_cl = "stent/input/cl__$n.vtk"
+filename_surf = "stent/input/mesh_$n.stl"
 filename_sdf = "stent/input/sdf_$n.vtk"
 
-nb_iterations = 50
+nb_iterations = 100
 deploy_pos =  get_init_pos_deploy_middle(filename_cl, initial_positions_stent, output_dir_crimping)
 
 # -------------------------------------------------------------------------------------------
@@ -69,12 +77,12 @@ trisconn = decompose(TriangleFace{Int}, surface)
 positions_rot = rotate(positions, pos_cl_T[1], pos_cl_0[end]-pos_cl_0[1], pos_cl_T[end]-pos_cl_T[1])
 new_mesh =   MeshIO.Mesh(positions_rot, trisconn)
 
-filename_surf = "stent/input/rot_model.stl"
+filename_surf = "stent/input/rot_model_$n.stl"
 save(filename_surf, new_mesh)
 
 cl__rot = rotate(cl_T, pos_cl_T[1], pos_cl_0[end]-pos_cl_0[1], pos_cl_T[end]-pos_cl_T[1])
 
-filename_cl = "stent/input/rot_cl.vtk"
+filename_cl = "stent/input/rot_cl_$n.vtk"
 write_vtk_configuration(filename_cl, cl__rot, [])
 
 # -------------------------------------------------------------------------------------------
@@ -97,7 +105,6 @@ open(output_dir_positioning * "/crimped.txt", "w") do io
 end
 
 disp = read_ics_vec(readdlm(output_dir_positioning * "u.txt"))
-write_vtk_configuration("stent/output3D/positioned.vtk", crimped_positions_stent + disp, connectivity_stent)
 
 # -------------------------------------------------------------------------------------------
 # Deployment
@@ -109,8 +116,4 @@ end
 s, x, y, z = sdfgen(filename_surf, 0.1; padding = 1, acceleration=:KDTree)
 write_vtk_general_structured_mesh(filename_sdf, -s, 0.1, x, y, z)
 
-deployment(initial_positions_stent_mat, initial_positions_stent, connectivity_stent, filename_sdf, output_dir_crimping, output_dir_positioning, output_dir_deployment)
-
-# disp = read_ics_vec(readdlm(output_dir_deployment * "u.txt"))
-# write_vtk_configuration("stent/output3D/deployed.vtk", initial_positions_stent + disp, connectivity_stent)
-
+deployment(initial_positions_stent_mat, initial_positions_stent, connectivity_stent, filename_sdf, output_dir_crimping, output_dir_positioning, output_dir_deployment,output_dir_deployment)

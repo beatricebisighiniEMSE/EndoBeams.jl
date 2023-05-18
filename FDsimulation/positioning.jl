@@ -10,7 +10,7 @@ function positioning(initial_positions_stent, connectivity_stent, nb_iterations,
     Δt_plot =  1.
     tᵉⁿᵈ = nb_iterations-1
     
-    params = Params(;ini_Δt, Δt_plot, max_Δt, tᵉⁿᵈ, output_dir = output_dir_positioning, stop_on_energy_threshold=false, tol_res = 1e-3, tol_ΔD = 1e-3, record_timings=false, verbose=false)
+    params = Params(;ini_Δt, Δt_plot, max_Δt, tᵉⁿᵈ, output_dir = output_dir_positioning, stop_on_energy_threshold=true, energy_threshold=1e-12, tol_res = 1e-3, tol_ΔD = 1e-3, record_timings=false, verbose=false)
     
     # -----------------------------------------------------------------------------------------
     # Stent 
@@ -69,12 +69,12 @@ function positioning(initial_positions_stent, connectivity_stent, nb_iterations,
     # -------------------------------------------------------------------------------------------
     
     # geometric and material properties
-    E = 225*1e3
+    stiffness_scaling = 1
+    E = 225*1e3 * stiffness_scaling
     ν = 0.33
-    mass_scaling = 1E4
+    mass_scaling = 1E6
     ρ = 9.13*1e-9 * mass_scaling
     damping = 1E2
-    rWireSection = 0.065
 
     Re₀ =  zeros(Mat33, nbeams)
     Re₀[1:nbeams_stent] .= read_ics_mat(readdlm(output_dir_crimping * "Re0.txt"))

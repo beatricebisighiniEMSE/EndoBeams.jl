@@ -5,29 +5,15 @@
 @with_kw struct BraidedStent 
 
     nbWires::Int = 24
-    rStent::Float64 = 2.7
-    rCrimpedStent::Float64 = 1.35
+    rStent::Float64 = 2.4
+    rCrimpedStent::Float64 = 1
     rWireSection::Float64 = 0.014
     wireGap::Float64 = 0
-    lengthStent::Float64 = 7
+    lengthStent::Float64 = 10
     nbTotalCells::Float64 = 35
     braidingPattern::Int = 2
 
-end 
-
-
-@with_kw struct Wallstent 
-
-    nbWires::Int = 12
-    rStent::Float64 = 3
-    rCrimpedStent::Float64 = 1
-    rWireSection::Float64 = 0.065
-    wireGap::Float64 = 0
-    lengthStent::Float64 = 22
-    nbTotalCells::Float64 = 20
-    braidingPattern::Int = 2
-
-end 
+end
 
 function helix!(positions, connectivity, nodeID, length, diameter, nbTotalCells, nbWires, rWireSection, braidingPattern, wireGap, wireID, clockwise)
     
@@ -195,7 +181,7 @@ function rotate(positions, origin, orient_vessel, orient_stent)
     
     orient_stent = orient_stent/norm(orient_stent)
     orient_vessel = orient_vessel/norm(orient_vessel)
-   
+
     axrot = get_rotation_axis(orient_stent, orient_vessel)
     θ = get_rotation_angle(orient_stent, orient_vessel)
     Mrot = get_rotation_matrix(θ, axrot)
@@ -793,6 +779,7 @@ function get_init_pos_deploy_middle(filename_cl, initial_positions_stent, output
     η = vcat(0, cumsum(norm.(diff(cl))))
     length_cl = η[end]
 
-    return length_cl*0.5-length_stent/2
+    println(length_cl*0.35-length_stent/2)
+    return length_cl*0.35-length_stent/2
 
 end 

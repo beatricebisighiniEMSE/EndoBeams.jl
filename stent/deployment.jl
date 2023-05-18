@@ -1,4 +1,4 @@
-function deployment(initial_positions_stent_mat, initial_positions_stent, connectivity_stent, filename_sdf, output_dir_crimping, output_dir_positioning, output_dir_deployment)
+function deployment(initial_positions_stent_mat, initial_positions_stent, connectivity_stent, filename_sdf, output_dir_crimping, output_dir_positioning, output_dir_deployment, output_dir_rom)
 
     # -----------------------------------------------------------------------------------------
     # Stent 
@@ -33,24 +33,23 @@ function deployment(initial_positions_stent_mat, initial_positions_stent, connec
     # geometric and material properties
     E = 225*1e3
     ν = 0.33
-    mass_scaling = 1E4
+    mass_scaling = 1E3
     ρ = 9.13*1e-9 * mass_scaling
-    damping = 1E3
-    radius = 0.065
-
+    damping = 1E4
+    
     Re₀ = read_ics_mat(readdlm(output_dir_crimping * "Re0.txt"))
 
     # beams vector
     beams = build_beams(nodes, connectivity_stent, E, ν, ρ, rWireSection, damping, Re₀)
 
     # contact parameters
-    kₙ = 4/3 * 5/(1-0.5^2)*sqrt(radius) # Approximate Hertz contact with 5 MPa wall stiffness
-    μ = 0.001
+    kₙ = 4/3 * 5/(1-0.5^2)*sqrt(rWireSection) # Approximate Hertz contact with 5 MPa wall stiffness
+    μ = 0.01
     εᵗ = 0.001 #regularized parameter for friction contact
     ηₙ = 0.1
-    kₜ = kₙ
+    kₜ = 1
     ηₜ = ηₙ
-    u̇ₛ = 0.005
+    u̇ₛ = 0.0005
     contact = ContactParameters(kₙ, μ, εᵗ, ηₙ, kₜ, ηₜ, u̇ₛ)
 
     # -------------------------------------------------------------------------------------------
@@ -107,17 +106,18 @@ function deployment(initial_positions_stent_mat, initial_positions_stent, connec
 
     # initial time step and total time
     ini_Δt = 1e-6
-    max_Δt = 1e-3
-    Δt_plot = 1e-3
+    max_Δt = 1e-2
+    Δt_plot = 1e-1
     tᵉⁿᵈ = 100
 
-    params = Params(ini_Δt = ini_Δt, Δt_plot = Δt_plot, max_Δt = max_Δt, tᵉⁿᵈ = tᵉⁿᵈ, output_dir = output_dir_deployment, stop_on_energy_threshold=true, energy_threshold=1e-10, tol_res = 1e-3, tol_ΔD = 1e-3, record_timings=false, verbose=true)
+    params = Params(ini_Δt = ini_Δt, Δt_plot = Δt_plot, max_Δt = max_Δt, tᵉⁿᵈ = tᵉⁿᵈ, output_dir = output_dir_deployment, stop_on_energy_threshold=true, energy_threshold=1e-12, tol_res = 1e-3, tol_ΔD = 1e-3, stop_long_simulation = false, record_timings=false, verbose=true)
 
     # -------------------------------------------------------------------------------------------z
     # Start simulation
     # -------------------------------------------------------------------------------------------
 
     solver!(conf, params)
+    write_txt_solution(nodes, beams, length(nodes), length(beams), output_dir_rom, false)
 
 end 
 
